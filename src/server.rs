@@ -60,7 +60,6 @@ impl<F: FieldElement> ValidationMemory<F> {
 }
 
 /// Main workhorse of the server.
-#[derive(Debug)]
 pub struct Server<F> {
     prng: Prng<F>,
     dimension: usize,

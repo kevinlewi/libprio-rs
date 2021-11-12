@@ -17,7 +17,6 @@ use std::convert::TryFrom;
 /// The main object that can be used to create Prio shares
 ///
 /// Client is used to create Prio shares.
-#[derive(Debug)]
 pub struct Client<F: FieldElement> {
     prng: Prng<F>,
     dimension: usize,
