@@ -97,7 +97,7 @@ impl Key {
     }
 
     /// Returns a reference to the underlying data.
-    pub(crate) fn as_slice(&self) -> &[u8] {
+    pub fn as_slice(&self) -> &[u8] {
         match self {
             Self::Aes128CtrHmacSha256(key) => &key[..],
             Self::Blake3(key) => &key[..],
