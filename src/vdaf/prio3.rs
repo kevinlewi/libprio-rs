@@ -242,7 +242,7 @@ pub struct Prio3VerifyParam {
 
 /// The message sent by the client to each aggregator. This includes the client's input share and
 /// the initial message of the input-validation protocol.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, PartialEq, Deserialize)]
 pub struct Prio3InputShare<F> {
     /// The input share.
     pub input_share: Share<F>,

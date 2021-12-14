@@ -37,7 +37,7 @@ pub enum VdafError {
 }
 
 /// An additive share of a vector of field elements.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Share<F> {
     /// An uncompressed share, typically sent to the leader.
     Leader(Vec<F>),
