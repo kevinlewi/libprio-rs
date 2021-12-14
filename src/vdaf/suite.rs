@@ -89,7 +89,7 @@ impl Key {
 
     /// Returns an uninitialized (i.e., zero-valued) key. The caller is expected to initialize the
     /// key with a (pseudo)random input.
-    pub(crate) fn uninitialized(suite: Suite) -> Self {
+    pub fn uninitialized(suite: Suite) -> Self {
         match suite {
             Suite::Aes128CtrHmacSha256 => Key::Aes128CtrHmacSha256([0; 32]),
             Suite::Blake3 => Key::Blake3([0; 32]),
@@ -105,7 +105,7 @@ impl Key {
     }
 
     /// Returns a mutable reference to the underlying data.
-    pub(crate) fn as_mut_slice(&mut self) -> &mut [u8] {
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
         match self {
             Self::Aes128CtrHmacSha256(key) => &mut key[..],
             Self::Blake3(key) => &mut key[..],
