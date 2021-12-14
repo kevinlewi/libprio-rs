@@ -113,7 +113,7 @@ impl Key {
     }
 
     /// Returns the suite for this key.
-    pub(crate) fn suite(&self) -> Suite {
+    pub fn suite(&self) -> Suite {
         match self {
             Key::Aes128CtrHmacSha256(_) => Suite::Aes128CtrHmacSha256,
             Key::Blake3(_) => Suite::Blake3,
