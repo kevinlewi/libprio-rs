@@ -191,6 +191,13 @@ pub struct Prio3<T: Type, A: Debug> {
     phantom: PhantomData<A>,
 }
 
+impl<T: Type, A: Debug> Prio3<T, A> {
+    /// Return the suite used for this instance of the VDAF.
+    pub fn suite(&self) -> Suite {
+        self.suite
+    }
+}
+
 impl<T: Type, A: Debug> Clone for Prio3<T, A> {
     fn clone(&self) -> Self {
         Self {
