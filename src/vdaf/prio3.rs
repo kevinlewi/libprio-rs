@@ -238,7 +238,7 @@ impl<T: Type, A: Debug> Vdaf for Prio3<T, A> {
 }
 
 /// The verification parameter used by each aggregator to evaluate the VDAF.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Prio3VerifyParam {
     /// Key used to derive the query randomness from the nonce.
     pub query_rand_init: Key,
