@@ -40,10 +40,10 @@ pub enum Suite {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Key {
     #[allow(missing_docs)]
-    Aes128CtrHmacSha256([u8; 32]),
+    Aes128CtrHmacSha256(#[serde(with = "hex")] [u8; 32]),
 
     #[allow(missing_docs)]
-    Blake3([u8; 32]),
+    Blake3(#[serde(with = "hex")] [u8; 32]),
 }
 
 impl PartialEq for Key {
