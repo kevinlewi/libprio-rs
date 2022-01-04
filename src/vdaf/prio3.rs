@@ -479,7 +479,7 @@ impl<T: Type, A: Debug> Aggregator for Prio3<T, A> {
         })
     }
 
-    fn prepare_preprocess<M: IntoIterator<Item = Self::PrepareMessage>>(
+    fn prepare_preprocess<M: IntoIterator<Item = Prio3PrepareMessage<T::Field>>>(
         &self,
         inputs: M,
     ) -> Result<Self::PrepareMessage, VdafError> {
