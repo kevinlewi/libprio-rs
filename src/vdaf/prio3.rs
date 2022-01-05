@@ -386,7 +386,7 @@ impl<T: Type, A: Debug> Client for Prio3<T, A> {
 
 /// State of each aggregator during the Prepare process.
 #[allow(missing_docs)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Prio3PrepareStep<F> {
     /// Ready to send the verifier message.
     Ready {
@@ -632,7 +632,7 @@ impl<T: Type, A: Debug> Aggregator for Prio3<T, A> {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 /// The verification message emitted by each aggregator during the Prepare process.
 pub struct Prio3PrepareMessage<F> {
     /// (A share of) the FLP verifier message. (See [`Type`](crate::pcp::Type).)
