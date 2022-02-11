@@ -8,12 +8,13 @@
 //! [BBCG+21]: https://ia.cr/2021/017
 //! [VDAF]: https://datatracker.ietf.org/doc/draft-patton-cfrg-vdaf/
 
+use crate::codec::{decode_items_u16, encode_items_u16, Decode, Encode};
 use crate::field::{FieldElement, FieldError};
 use crate::pcp::PcpError;
 use crate::prng::PrngError;
 use crate::vdaf::suite::{Key, Suite, SuiteError};
 use std::fmt::Debug;
-use std::io::Read;
+use std::io::Cursor;
 
 /// Errors emitted by this module.
 #[derive(Debug, thiserror::Error)]
@@ -53,19 +54,46 @@ pub enum Share<F> {
     Helper(Key),
 }
 
-impl<F: FieldElement> Share<F> {
-    pub(crate) fn read_leader<R: Read>(length: usize, reader: &mut R) -> Result<Self, VdafError> {
-        let mut data = Vec::with_capacity(length);
-        for _ in 0..length {
-            data.push(F::try_from_reader(reader)?);
-        }
-        Ok(Share::Leader(data))
-    }
+/// Parameters needed to decode a [`Share`]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ShareDecodingParameter {
+    is_leader: bool,
+    uncompressed_share_length: usize,
+    suite: Suite,
+}
 
-    pub(crate) fn read_helper<R: Read>(suite: Suite, reader: &mut R) -> Result<Self, VdafError> {
-        let mut seed = Key::uninitialized(suite);
-        reader.read_exact(seed.as_mut_slice())?;
-        Ok(Share::Helper(seed))
+impl<F: FieldElement> Decode<ShareDecodingParameter> for Share<F> {
+    type Error = VdafError;
+
+    fn decode(
+        decoding_parameter: &ShareDecodingParameter,
+        bytes: &mut Cursor<&[u8]>,
+    ) -> Result<Self, Self::Error> {
+        if decoding_parameter.is_leader {
+            let mut data = Vec::with_capacity(decoding_parameter.uncompressed_share_length);
+            for _ in 0..decoding_parameter.uncompressed_share_length {
+                data.push(F::decode(&(), bytes)?)
+            }
+            Ok(Self::Leader(data))
+        } else {
+            let key = Key::decode(&decoding_parameter.suite, bytes)?;
+            Ok(Self::Helper(key))
+        }
+    }
+}
+
+impl<F: FieldElement> Encode for Share<F> {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        match self {
+            Share::Leader(share_data) => {
+                for x in share_data {
+                    x.encode(bytes);
+                }
+            }
+            Share::Helper(share_seed) => {
+                share_seed.encode(bytes);
+            }
+        }
     }
 }
 
@@ -287,6 +315,22 @@ impl<F: FieldElement> AggregateShare<F> {
         }
 
         Ok(())
+    }
+}
+
+impl<F: FieldElement> Encode for AggregateShare<F> {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        encode_items_u16(bytes, &self.0);
+    }
+}
+
+impl<F: FieldElement> Decode<()> for AggregateShare<F> {
+    type Error = VdafError;
+
+    fn decode(_decoding_parameter: &(), bytes: &mut Cursor<&[u8]>) -> Result<Self, Self::Error> {
+        let items = decode_items_u16(&(), bytes)?;
+
+        Ok(Self(items))
     }
 }
 
