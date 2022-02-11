@@ -198,26 +198,15 @@ fn check_num_aggregators(num_aggregators: u8) -> Result<(), VdafError> {
 }
 
 /// The base type for prio3.
-#[derive(Debug)]
-pub struct Prio3<T: Type, A: Debug> {
+#[derive(Clone, Debug)]
+pub struct Prio3<T: Type, A: Clone + Debug> {
     num_aggregators: u8,
     suite: Suite,
     typ: T,
     phantom: PhantomData<A>,
 }
 
-impl<T: Type, A: Debug> Clone for Prio3<T, A> {
-    fn clone(&self) -> Self {
-        Self {
-            num_aggregators: self.num_aggregators,
-            suite: self.suite,
-            typ: self.typ.clone(),
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<T: Type, A: Debug> Vdaf for Prio3<T, A> {
+impl<T: Type, A: Clone + Debug + Sync + Send> Vdaf for Prio3<T, A> {
     type Measurement = T::Measurement;
     type AggregateResult = A;
     type AggregationParam = ();
@@ -376,7 +365,7 @@ impl<F: FieldElement> Decode<Prio3PrepareStep<F>> for Prio3PrepareMessage<F> {
     }
 }
 
-impl<T: Type, A: Debug> Client for Prio3<T, A> {
+impl<T: Type, A: Clone + Debug + Sync + Send> Client for Prio3<T, A> {
     fn shard(
         &self,
         _public_param: &(),
@@ -531,7 +520,7 @@ impl<F> Prio3PrepareStep<F> {
     }
 }
 
-impl<T: Type, A: Debug> Aggregator for Prio3<T, A> {
+impl<T: Type, A: Clone + Debug + Sync + Send> Aggregator for Prio3<T, A> {
     type PrepareStep = Prio3PrepareStep<T::Field>;
     type PrepareMessage = Prio3PrepareMessage<T::Field>;
 
@@ -764,7 +753,7 @@ impl<T: Type, A: Debug> Aggregator for Prio3<T, A> {
     }
 }
 
-impl<T, A> Collector for Prio3<T, A>
+impl<T, A: Clone + Debug + Sync + Send> Collector for Prio3<T, A>
 where
     T: Type,
     A: TryFrom<AggregateShare<T::Field>, Error = VdafError> + Eq + Debug,
