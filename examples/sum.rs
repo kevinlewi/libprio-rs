@@ -25,7 +25,7 @@ fn main() {
     let mut client1 = Client::new(dim, pub_key1.clone(), pub_key2.clone()).unwrap();
     let mut client2 = Client::new(dim, pub_key1, pub_key2).unwrap();
 
-    let data1_u32 = [0, 0, 1, 0, 0, 0, 0, 0];
+    let data1_u32 = [0, 0, 1, 1, 1, 0, 0, 0];
     println!("Client 1 Input: {:?}", data1_u32);
 
     let data1 = data1_u32
@@ -33,7 +33,7 @@ fn main() {
         .map(|x| Field32::from(*x))
         .collect::<Vec<Field32>>();
 
-    let data2_u32 = [0, 0, 1, 0, 0, 0, 0, 0];
+    let data2_u32 = [0, 0, 1, 0, 1, 0, 0, 0];
     println!("Client 2 Input: {:?}", data2_u32);
 
     let data2 = data2_u32
@@ -45,7 +45,12 @@ fn main() {
     let (share2_1, share2_2) = client2.encode_simple(&data2).unwrap();
     let eval_at = Field32::from(12313);
 
-    let mut server1 = Server::new(dim, true, priv_key1).unwrap();
+    println!("share1_1: {:?}", &share1_1);
+    println!("encoded share1_1: {:?}", base64::encode(&share1_1));
+    println!("share1_2: {:?}", &share1_1);
+    println!("encoded share1_2: {:?}", base64::encode(&share1_2));
+
+    let mut server1: Server<Field32> = Server::new(dim, true, priv_key1).unwrap();
     let mut server2 = Server::new(dim, false, priv_key2).unwrap();
 
     let v1_1 = server1
@@ -61,6 +66,11 @@ fn main() {
     let v2_2 = server2
         .generate_verification_message(eval_at, &share2_2)
         .unwrap();
+
+    let v1_1_string = serde_json::to_string(&v1_1).unwrap();
+    println!("v1_1_string: {:?}", v1_1_string);
+    let v1_2_string = serde_json::to_string(&v1_2).unwrap();
+    println!("v1_2_string: {:?}", v1_2_string);
 
     let _ = server1.aggregate(&share1_1, &v1_1, &v1_2).unwrap();
     let _ = server2.aggregate(&share1_2, &v1_1, &v1_2).unwrap();

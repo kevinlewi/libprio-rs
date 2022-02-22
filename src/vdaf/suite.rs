@@ -122,7 +122,6 @@ impl Key {
 }
 
 /// A KeyStream expands a key into a stream of pseudorandom bytes.
-#[derive(Debug)]
 pub enum KeyStream {
     #[allow(missing_docs)]
     Aes128CtrHmacSha256(Aes128Ctr),

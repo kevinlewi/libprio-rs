@@ -22,7 +22,6 @@ pub enum PrngError {
 
 /// This type implements an iterator that generates a pseudorandom sequence of field elements. The
 /// sequence is derived from the key stream of AES-128 in CTR mode with a random IV.
-#[derive(Debug)]
 pub(crate) struct Prng<F> {
     phantom: PhantomData<F>,
     key_stream: KeyStream,
