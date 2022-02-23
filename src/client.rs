@@ -4,12 +4,11 @@
 //! The Prio v2 client. Only 0 / 1 vectors are supported for now.
 
 use crate::{
-    encrypt::{encrypt_share, EncryptError, PublicKey},
     field::FieldElement,
     polynomial::{poly_fft, PolyAuxMemory},
     prng::{Prng, PrngError},
     util::{proof_length, unpack_proof_mut},
-    vdaf::suite::{Key, KeyStream, Suite},
+    vdaf::suite::{Key, KeyStream, Suite, SuiteError},
 };
 
 use std::convert::TryFrom;
@@ -25,8 +24,6 @@ pub struct Client<F: FieldElement> {
     evals_f: Vec<F>,
     evals_g: Vec<F>,
     poly_mem: PolyAuxMemory<F>,
-    public_key1: PublicKey,
-    public_key2: PublicKey,
 }
 
 /// Errors that might be emitted by the client.
@@ -40,21 +37,17 @@ pub enum ClientError {
     /// system's addressible memory.
     #[error("input size exceeds field capacity")]
     InputSizeExceedsMemoryCapacity,
-    /// Encryption/decryption error
-    #[error("encryption/decryption error")]
-    Encrypt(#[from] EncryptError),
     /// PRNG error
     #[error("prng error: {0}")]
     Prng(#[from] PrngError),
+    /// Suite error
+    #[error("suite error: {0}")]
+    Suite(#[from] SuiteError),
 }
 
 impl<F: FieldElement> Client<F> {
     /// Construct a new Prio client
-    pub fn new(
-        dimension: usize,
-        public_key1: PublicKey,
-        public_key2: PublicKey,
-    ) -> Result<Self, ClientError> {
+    pub fn new(dimension: usize) -> Result<Self, ClientError> {
         let n = (dimension + 1).next_power_of_two();
 
         if let Ok(size) = F::Integer::try_from(2 * n) {
@@ -73,8 +66,6 @@ impl<F: FieldElement> Client<F> {
             evals_f: vec![F::zero(); 2 * n],
             evals_g: vec![F::zero(); 2 * n],
             poly_mem: PolyAuxMemory::new(n),
-            public_key1,
-            public_key2,
         })
     }
 
@@ -90,7 +81,7 @@ impl<F: FieldElement> Client<F> {
     ///
     /// This might be slightly more efficient on large vectors, because one can
     /// avoid copying the input data.
-    pub fn encode_with<G>(&mut self, init_function: G) -> Result<(Vec<u8>, Vec<u8>), EncryptError>
+    pub fn encode_with<G>(&mut self, init_function: G) -> Result<(Vec<u8>, Vec<u8>), ClientError>
     where
         G: FnOnce(&mut [F]),
     {
@@ -104,10 +95,8 @@ impl<F: FieldElement> Client<F> {
             *s1 -= d;
         }
         let share1 = F::slice_into_byte_vec(&proof);
-        // encrypt shares with respective keys
-        let encrypted_share1 = encrypt_share(&share1, &self.public_key1)?;
-        let encrypted_share2 = encrypt_share(share2.as_slice(), &self.public_key2)?;
-        Ok((encrypted_share1, encrypted_share2))
+
+        Ok((share1, share2.as_slice().to_vec()))
     }
 
     pub(crate) fn prove_with<G>(&mut self, init_function: G) -> Vec<F>
@@ -136,13 +125,9 @@ impl<F: FieldElement> Client<F> {
 
 /// Convenience function if one does not want to reuse
 /// [`Client`](struct.Client.html).
-pub fn encode_simple<F: FieldElement>(
-    data: &[F],
-    public_key1: PublicKey,
-    public_key2: PublicKey,
-) -> Result<(Vec<u8>, Vec<u8>), ClientError> {
+pub fn encode_simple<F: FieldElement>(data: &[F]) -> Result<(Vec<u8>, Vec<u8>), ClientError> {
     let dimension = data.len();
-    let mut client_memory = Client::new(dimension, public_key1, public_key2)?;
+    let mut client_memory = Client::new(dimension)?;
     client_memory.encode_simple(data)
 }
 
@@ -222,20 +207,12 @@ fn construct_proof<F: FieldElement>(
 #[test]
 fn test_encode() {
     use crate::field::Field32;
-    let pub_key1 = PublicKey::from_base64(
-        "BIl6j+J6dYttxALdjISDv6ZI4/VWVEhUzaS05LgrsfswmbLOgNt9HUC2E0w+9RqZx3XMkdEHBHfNuCSMpOwofVQ=",
-    )
-    .unwrap();
-    let pub_key2 = PublicKey::from_base64(
-        "BNNOqoU54GPo+1gTPv+hCgA9U2ZCKd76yOMrWa1xTWgeb4LhFLMQIQoRwDVaW64g/WTdcxT4rDULoycUNFB60LE=",
-    )
-    .unwrap();
 
     let data_u32 = [0u32, 1, 0, 1, 1, 0, 0, 0, 1];
     let data = data_u32
         .iter()
         .map(|x| Field32::from(*x))
         .collect::<Vec<Field32>>();
-    let encoded_shares = encode_simple(&data, pub_key1, pub_key2);
+    let encoded_shares = encode_simple(&data);
     assert!(encoded_shares.is_ok());
 }

@@ -1,29 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use prio::client::*;
-use prio::encrypt::*;
 use prio::field::*;
 use prio::server::*;
 
 fn main() {
-    let priv_key1 = PrivateKey::from_base64(
-        "BIl6j+J6dYttxALdjISDv6ZI4/VWVEhUzaS05LgrsfswmbLOgN\
-         t9HUC2E0w+9RqZx3XMkdEHBHfNuCSMpOwofVSq3TfyKwn0NrftKisKKVSaTOt5seJ67P5QL4hxgPWvxw==",
-    )
-    .unwrap();
-    let priv_key2 = PrivateKey::from_base64(
-        "BNNOqoU54GPo+1gTPv+hCgA9U2ZCKd76yOMrWa1xTWgeb4LhF\
-         LMQIQoRwDVaW64g/WTdcxT4rDULoycUNFB60LER6hPEHg/ObBnRPV1rwS3nj9Bj0tbjVPPyL9p8QW8B+w==",
-    )
-    .unwrap();
-
-    let pub_key1 = PublicKey::from(&priv_key1);
-    let pub_key2 = PublicKey::from(&priv_key2);
-
     let dim = 8;
 
-    let mut client1 = Client::new(dim, pub_key1.clone(), pub_key2.clone()).unwrap();
-    let mut client2 = Client::new(dim, pub_key1, pub_key2).unwrap();
+    let mut client1 = Client::new(dim).unwrap();
+    let mut client2 = Client::new(dim).unwrap();
 
     let data1_u32 = [0, 0, 1, 1, 1, 0, 0, 0];
     println!("Client 1 Input: {:?}", data1_u32);
@@ -50,8 +35,8 @@ fn main() {
     println!("share1_2: {:?}", &share1_1);
     println!("encoded share1_2: {:?}", base64::encode(&share1_2));
 
-    let mut server1: Server<Field32> = Server::new(dim, true, priv_key1).unwrap();
-    let mut server2 = Server::new(dim, false, priv_key2).unwrap();
+    let mut server1: Server<Field32> = Server::new(dim, true).unwrap();
+    let mut server2 = Server::new(dim, false).unwrap();
 
     let v1_1 = server1
         .generate_verification_message(eval_at, &share1_1)

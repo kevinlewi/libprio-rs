@@ -4,7 +4,6 @@ use criterion::{criterion_group, criterion_main, Criterion};
 
 use prio::benchmarked::*;
 use prio::client::Client as Prio2Client;
-use prio::encrypt::PublicKey;
 use prio::field::{random_vector, Field128 as F, FieldElement};
 use prio::pcp::gadgets::Mul;
 use prio::server::{generate_verification_message, ValidationMemory};
@@ -73,12 +72,6 @@ pub fn poly_mul(c: &mut Criterion) {
     }
 }
 
-// Public keys used to instantiate the v2 client.
-const PUBKEY1: &str =
-    "BIl6j+J6dYttxALdjISDv6ZI4/VWVEhUzaS05LgrsfswmbLOgNt9HUC2E0w+9RqZx3XMkdEHBHfNuCSMpOwofVQ=";
-const PUBKEY2: &str =
-    "BNNOqoU54GPo+1gTPv+hCgA9U2ZCKd76yOMrWa1xTWgeb4LhFLMQIQoRwDVaW64g/WTdcxT4rDULoycUNFB60LE=";
-
 /// Benchmark generation and verification of boolean vectors.
 pub fn bool_vec(c: &mut Criterion) {
     let test_sizes = [1, 10, 100, 1_000, 10_000];
@@ -86,10 +79,7 @@ pub fn bool_vec(c: &mut Criterion) {
         let data = vec![F::zero(); *size];
 
         // v2
-        let pk1 = PublicKey::from_base64(PUBKEY1).unwrap();
-        let pk2 = PublicKey::from_base64(PUBKEY2).unwrap();
-        let mut client: Prio2Client<F> =
-            Prio2Client::new(data.len(), pk1.clone(), pk2.clone()).unwrap();
+        let mut client: Prio2Client<F> = Prio2Client::new(data.len()).unwrap();
 
         c.bench_function(&format!("bool vec v2 prove, size={}", *size), |b| {
             b.iter(|| {
